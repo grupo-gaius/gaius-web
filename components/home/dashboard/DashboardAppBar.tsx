@@ -51,7 +51,7 @@ export function DashboardAppBar({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
 
-  function handleToolClick(e: React.MouseEvent) {
+  function handlePlaceholderToolClick(e: React.MouseEvent) {
     e.preventDefault();
   }
 
@@ -114,11 +114,12 @@ export function DashboardAppBar({
           {NAV_TOOL_LABELS.map((t) => (
             <Button
               key={t.id}
+              component={Link}
+              href={t.id === "calc" ? "/home/calculadora" : "#"}
               color="inherit"
               size="small"
               startIcon={TOOL_ICONS[t.id as keyof typeof TOOL_ICONS]}
-              onClick={handleToolClick}
-              href="#"
+              onClick={t.id === "calc" ? undefined : handlePlaceholderToolClick}
               sx={{
                 color: barOnDark ? "rgba(255,255,255,0.78)" : "text.secondary",
                 fontWeight: 600,
@@ -198,12 +199,13 @@ export function DashboardAppBar({
         {NAV_TOOL_LABELS.map((t) => (
           <Button
             key={t.id}
+            component={Link}
+            href={t.id === "calc" ? "/home/calculadora" : "#"}
             size="small"
             variant="outlined"
             color="primary"
             startIcon={TOOL_ICONS[t.id as keyof typeof TOOL_ICONS]}
-            onClick={handleToolClick}
-            href="#"
+            onClick={t.id === "calc" ? undefined : handlePlaceholderToolClick}
             sx={{
               flexShrink: 0,
               borderRadius: 2,

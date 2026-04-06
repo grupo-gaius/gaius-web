@@ -69,7 +69,7 @@ export const FEATURED_NEWS_CATEGORY_LABELS: Record<FeaturedNewsCategory, string>
 };
 
 export const NAV_TOOL_LABELS = [
-  { id: "calc", label: "Calculadora" },
+  { id: "calc", label: "Calculadora avançada" },
   { id: "indices", label: "Índices" },
   { id: "sim", label: "Simulador" },
 ] as const;

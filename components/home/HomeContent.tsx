@@ -46,23 +46,28 @@ export function HomeContent() {
         component="main"
         sx={{
           flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
           pt: { xs: "108px", sm: "64px" },
           overflowX: "hidden",
         }}
       >
-        <MarketShowcase items={SHOWCASE_TICKERS} />
+        <Box sx={{ flex: 1 }}>
+          <MarketShowcase items={SHOWCASE_TICKERS} />
 
-        <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
-          <FeaturedNewsSection
-            main={FEATURED_NEWS[0]}
-            secondary={[FEATURED_NEWS[1], FEATURED_NEWS[2]]}
-            mostRead={MOST_READ_NEWS}
-          />
-          <MarketTopicRankingsSection />
-          <IbovespaMarketSection />
-          <SubscriptionPlansSection plans={SUBSCRIPTION_PLANS} />
-          <AllAssetsSection categories={ASSET_CATEGORY_CARDS} />
-        </Container>
+          <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
+            <FeaturedNewsSection
+              main={FEATURED_NEWS[0]}
+              secondary={[FEATURED_NEWS[1], FEATURED_NEWS[2]]}
+              mostRead={MOST_READ_NEWS}
+            />
+            <MarketTopicRankingsSection />
+            <IbovespaMarketSection />
+            <SubscriptionPlansSection plans={SUBSCRIPTION_PLANS} />
+            <AllAssetsSection categories={ASSET_CATEGORY_CARDS} />
+          </Container>
+        </Box>
 
         <DashboardFooter />
       </Box>
