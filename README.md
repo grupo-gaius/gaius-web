@@ -73,10 +73,16 @@ pnpm install
 
 ### 3. Configurar variáveis de ambiente
 
-Crie o arquivo `.env.local` na raiz do projeto (não é versionado — veja `.gitignore`):
+Há um modelo versionado em [`.env.example`](.env.example). Copie para `.env.local` (não vai para o Git):
 
 ```bash
-# Copie e ajuste conforme seu backend
+cp .env.example .env.local
+```
+
+No Windows (PowerShell):
+
+```powershell
+Copy-Item .env.example .env.local
 ```
 
 **Opção A — Proxy do Next (recomendado em desenvolvimento, evita CORS)**
