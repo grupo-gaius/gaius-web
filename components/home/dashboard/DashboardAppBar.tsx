@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import AccountBalance from "@mui/icons-material/AccountBalance";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import CalculateOutlined from "@mui/icons-material/CalculateOutlined";
@@ -19,6 +19,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 import Link from "next/link";
+import { AssetSearchField } from "@/components/home/dashboard/AssetSearchField";
 import { ThemeModeToggle } from "@/components/home/dashboard/ThemeModeToggle";
 import { NAV_TOOL_LABELS } from "@/utils/mock-dashboard-data";
 
@@ -112,28 +113,30 @@ export function DashboardAppBar({
           }}
         >
           {NAV_TOOL_LABELS.map((t) => (
-            <Button
-              key={t.id}
-              component={Link}
-              href={t.id === "calc" ? "/home/calculadora" : "#"}
-              color="inherit"
-              size="small"
-              startIcon={TOOL_ICONS[t.id as keyof typeof TOOL_ICONS]}
-              onClick={t.id === "calc" ? undefined : handlePlaceholderToolClick}
-              sx={{
-                color: barOnDark ? "rgba(255,255,255,0.78)" : "text.secondary",
-                fontWeight: 600,
-                borderRadius: 2,
-                px: 1.5,
-                "& .MuiButton-startIcon": { color: "primary.main" },
-                "&:hover": {
-                  bgcolor: barOnDark ? "rgba(255,255,255,0.08)" : "action.hover",
-                  color: barOnDark ? "#fff" : "text.primary",
-                },
-              }}
-            >
-              {t.label}
-            </Button>
+            <Fragment key={t.id}>
+              {t.id === "calc" ? <AssetSearchField barOnDark={barOnDark} minWidth={220} /> : null}
+              <Button
+                component={Link}
+                href={t.id === "calc" ? "/home/calculadora" : "#"}
+                color="inherit"
+                size="small"
+                startIcon={TOOL_ICONS[t.id as keyof typeof TOOL_ICONS]}
+                onClick={t.id === "calc" ? undefined : handlePlaceholderToolClick}
+                sx={{
+                  color: barOnDark ? "rgba(255,255,255,0.78)" : "text.secondary",
+                  fontWeight: 600,
+                  borderRadius: 2,
+                  px: 1.5,
+                  "& .MuiButton-startIcon": { color: "primary.main" },
+                  "&:hover": {
+                    bgcolor: barOnDark ? "rgba(255,255,255,0.08)" : "action.hover",
+                    color: barOnDark ? "#fff" : "text.primary",
+                  },
+                }}
+              >
+                {t.label}
+              </Button>
+            </Fragment>
           ))}
         </Box>
 
@@ -197,29 +200,33 @@ export function DashboardAppBar({
         }}
       >
         {NAV_TOOL_LABELS.map((t) => (
-          <Button
-            key={t.id}
-            component={Link}
-            href={t.id === "calc" ? "/home/calculadora" : "#"}
-            size="small"
-            variant="outlined"
-            color="primary"
-            startIcon={TOOL_ICONS[t.id as keyof typeof TOOL_ICONS]}
-            onClick={t.id === "calc" ? undefined : handlePlaceholderToolClick}
-            sx={{
-              flexShrink: 0,
-              borderRadius: 2,
-              fontWeight: 600,
-              borderColor: barOnDark ? "rgba(255,255,255,0.25)" : "divider",
-              color: barOnDark ? "rgba(255,255,255,0.9)" : "text.primary",
-              "&:hover": {
-                borderColor: "primary.main",
-                bgcolor: barOnDark ? "rgba(234, 88, 12, 0.12)" : "rgba(234, 88, 12, 0.08)",
-              },
-            }}
-          >
-            {t.label}
-          </Button>
+          <Fragment key={t.id}>
+            {t.id === "calc" ? (
+              <AssetSearchField barOnDark={barOnDark} minWidth={168} />
+            ) : null}
+            <Button
+              component={Link}
+              href={t.id === "calc" ? "/home/calculadora" : "#"}
+              size="small"
+              variant="outlined"
+              color="primary"
+              startIcon={TOOL_ICONS[t.id as keyof typeof TOOL_ICONS]}
+              onClick={t.id === "calc" ? undefined : handlePlaceholderToolClick}
+              sx={{
+                flexShrink: 0,
+                borderRadius: 2,
+                fontWeight: 600,
+                borderColor: barOnDark ? "rgba(255,255,255,0.25)" : "divider",
+                color: barOnDark ? "rgba(255,255,255,0.9)" : "text.primary",
+                "&:hover": {
+                  borderColor: "primary.main",
+                  bgcolor: barOnDark ? "rgba(234, 88, 12, 0.12)" : "rgba(234, 88, 12, 0.08)",
+                },
+              }}
+            >
+              {t.label}
+            </Button>
+          </Fragment>
         ))}
       </Box>
     </AppBar>
