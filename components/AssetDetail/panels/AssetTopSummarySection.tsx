@@ -5,7 +5,7 @@ import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AssetSectionHeading } from "@/components/AssetDetail/AssetSectionHeading";
 import { MiniCard, RightSection } from "@/components/AssetDetail/AssetDetailPage.styled";
 import type { AssetCurrency, AssetDetailData } from "@/types/asset-detail";
@@ -145,6 +145,11 @@ export function AssetTopSummarySection({
   const v12m = stockMetrics?.variation12m ?? variation12m;
   const displayLegalName = stockMetrics?.legalName ?? legalName;
 
+  const [logoReady, setLogoReady] = useState(false);
+  useEffect(() => {
+    setLogoReady(true);
+  }, []);
+
   return (
     <RightSection sx={{ py: 2, px: 2 }}>
       <AssetSectionHeading icon={InsightsOutlined} title="Resumo do ativo" />
@@ -161,8 +166,9 @@ export function AssetTopSummarySection({
             }}
           >
             <Avatar
-              src={stockMetrics?.logoUrl}
+              src={logoReady ? stockMetrics?.logoUrl : undefined}
               variant="rounded"
+              suppressHydrationWarning
               sx={{
                 width: 48,
                 height: 48,

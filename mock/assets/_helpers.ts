@@ -1,4 +1,5 @@
 import type { AssetDetailPriceRange } from "@/types/asset-detail";
+import { attachCandlesToPriceHistory } from "@/lib/asset-detail/candles";
 
 export function series(base: number, deltas: number[]): number[] {
   let v = base;
@@ -9,7 +10,7 @@ export function series(base: number, deltas: number[]): number[] {
 }
 
 export function buildDefaultPriceHistory(basePrice: number): AssetDetailPriceRange[] {
-  return [
+  return attachCandlesToPriceHistory([
     {
       range: "1D",
       data: series(basePrice * 0.98, [
@@ -32,7 +33,7 @@ export function buildDefaultPriceHistory(basePrice: number): AssetDetailPriceRan
     },
     { range: "1Y", data: series(basePrice * 0.78, [0.55, 0.32, -0.28, 0.68, 0.42, -0.35, 0.72, 0.48, -0.22, 0.58, 0.35, 0.28]) },
     { range: "MAX", data: series(basePrice * 0.58, [0.8, 0.45, -0.35, 1.1, 0.62, -0.48, 0.95, 0.7, -0.4, 1.2, 0.85, 0.55]) },
-  ];
+  ]);
 }
 
 export function hashTicker(ticker: string): number {

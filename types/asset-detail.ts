@@ -34,7 +34,20 @@ export interface AssetDetailOhlc {
 
 export interface AssetDetailPriceRange {
   range: string;
+  /** Série de fechamento (legado / fallback). */
   data: number[];
+  /** Velas OHLCV para o gráfico de trading. */
+  candles?: AssetCandle[];
+}
+
+export interface AssetCandle {
+  /** Unix timestamp (segundos). */
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
 }
 
 export interface AssetAboutSection {

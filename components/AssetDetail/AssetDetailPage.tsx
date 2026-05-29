@@ -14,10 +14,10 @@ import Stack from "@mui/material/Stack";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
+import { AssetChart } from "@/components/AssetChart";
 import {
   ChartArea,
-  ChartCanvasWrap,
   HeaderActions,
   HeaderMain,
   Layout,
@@ -53,7 +53,7 @@ const CURRENCY_RATES: Record<AssetCurrency, number> = {
   EUR: 1 / 5.45,
 };
 
-const CHART_ANIM_MS = 400;
+import { getCandlesForRange } from "@/lib/asset-detail/candles";
 
 function tickerInitials(ticker: string): string {
   const t = ticker.replace(/\d/g, "").slice(0, 2);
@@ -73,153 +73,6 @@ function formatPrice(value: number, currency: AssetCurrency): string {
 function formatPct(n: number): string {
   const sign = n >= 0 ? "+" : "";
   return `${sign}${n.toFixed(2).replace(".", ",")}%`;
-}
-
-function drawLineChart(
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  data: number[],
-  progress: number,
-  lineColor: string,
-) {
-  ctx.clearRect(0, 0, width, height);
-
-  if (data.length < 2 || width <= 0 || height <= 0) return;
-
-  const padX = 4;
-  const padY = 8;
-  const innerW = width - padX * 2;
-  const innerH = height - padY * 2;
-
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const span = max - min || 1;
-
-  const count = Math.max(2, Math.floor(data.length * progress));
-  const slice = data.slice(0, count);
-
-  const points = slice.map((v, i) => ({
-    x: padX + (i / (data.length - 1)) * innerW,
-    y: padY + innerH - ((v - min) / span) * innerH,
-  }));
-
-  const baselineY = padY + innerH;
-
-  const gradient = ctx.createLinearGradient(0, padY, 0, baselineY);
-  gradient.addColorStop(0, `${lineColor}33`);
-  gradient.addColorStop(1, `${lineColor}00`);
-
-  ctx.beginPath();
-  ctx.moveTo(points[0].x, points[0].y);
-  for (let i = 1; i < points.length; i++) {
-    ctx.lineTo(points[i].x, points[i].y);
-  }
-  ctx.lineTo(points[points.length - 1].x, baselineY);
-  ctx.lineTo(points[0].x, baselineY);
-  ctx.closePath();
-  ctx.fillStyle = gradient;
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(points[0].x, points[0].y);
-  for (let i = 1; i < points.length; i++) {
-    ctx.lineTo(points[i].x, points[i].y);
-  }
-  ctx.strokeStyle = lineColor;
-  ctx.lineWidth = 2;
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
-  ctx.stroke();
-}
-
-function AssetLineChart({
-  data,
-  variation,
-  rangeKey,
-}: {
-  data: number[];
-  variation: number;
-  rangeKey: string;
-}) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animRef = useRef<number | null>(null);
-  const progressRef = useRef(0);
-  const startRef = useRef<number | null>(null);
-
-  const isPositive = variation >= 0;
-  const lineColor = isPositive ? BRAND_PRIMARY : BRAND_NEGATIVE;
-
-  const paint = useCallback(
-    (progress: number) => {
-      const canvas = canvasRef.current;
-      const wrap = wrapRef.current;
-      if (!canvas || !wrap) return;
-
-      const rect = wrap.getBoundingClientRect();
-      const w = Math.floor(rect.width);
-      const h = Math.floor(rect.height);
-      if (w <= 0 || h <= 0) return;
-
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      canvas.style.width = `${w}px`;
-      canvas.style.height = `${h}px`;
-
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drawLineChart(ctx, w, h, data, progress, lineColor);
-    },
-    [data, lineColor],
-  );
-
-  useEffect(() => {
-    progressRef.current = 0;
-    startRef.current = null;
-    if (animRef.current != null) {
-      cancelAnimationFrame(animRef.current);
-    }
-
-    const tick = (now: number) => {
-      if (startRef.current == null) startRef.current = now;
-      const elapsed = now - startRef.current;
-      const t = Math.min(1, elapsed / CHART_ANIM_MS);
-      progressRef.current = t;
-      paint(t);
-      if (t < 1) {
-        animRef.current = requestAnimationFrame(tick);
-      }
-    };
-
-    animRef.current = requestAnimationFrame(tick);
-
-    return () => {
-      if (animRef.current != null) cancelAnimationFrame(animRef.current);
-    };
-  }, [data, rangeKey, paint]);
-
-  useEffect(() => {
-    const wrap = wrapRef.current;
-    if (!wrap) return;
-
-    const ro = new ResizeObserver(() => paint(progressRef.current));
-    ro.observe(wrap);
-    return () => ro.disconnect();
-  }, [paint]);
-
-  return (
-    <ChartCanvasWrap ref={wrapRef}>
-      <Box
-        component="canvas"
-        ref={canvasRef}
-        sx={{ display: "block", width: "100%", height: "100%" }}
-        aria-hidden
-      />
-    </ChartCanvasWrap>
-  );
 }
 
 export function AssetDetailPage(props: AssetDetailData) {
@@ -244,17 +97,19 @@ export function AssetDetailPage(props: AssetDetailData) {
   const rate = CURRENCY_RATES[displayCurrency];
   const displayPrice = currentPrice * rate;
 
-  const chartData = useMemo(() => {
-    const entry = priceHistory.find((p) => p.range === range);
-    return entry?.data ?? priceHistory[0]?.data ?? [];
-  }, [priceHistory, range]);
+  const chartEntry = useMemo(
+    () => priceHistory.find((p) => p.range === range),
+    [priceHistory, range],
+  );
+
+  const chartCandles = useMemo(() => getCandlesForRange(chartEntry), [chartEntry]);
 
   const chartVariation = useMemo(() => {
-    if (chartData.length < 2) return variation;
-    const first = chartData[0];
-    const last = chartData[chartData.length - 1];
+    if (chartCandles.length < 2) return variation;
+    const first = chartCandles[0]!.close;
+    const last = chartCandles[chartCandles.length - 1]!.close;
     return ((last - first) / first) * 100;
-  }, [chartData, variation]);
+  }, [chartCandles, variation]);
 
   function handleShare() {
     const url = typeof window !== "undefined" ? window.location.href : "";
@@ -367,7 +222,11 @@ export function AssetDetailPage(props: AssetDetailData) {
               }}
             />
           </Stack>
-          <AssetLineChart data={chartData} variation={chartVariation} rangeKey={range} />
+          <AssetChart
+            candles={chartCandles}
+            rangeKey={range}
+            currencyLabel={displayCurrency}
+          />
         </ChartArea>
 
         <StatsFooter>

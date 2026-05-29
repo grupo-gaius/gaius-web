@@ -3,8 +3,6 @@
 import PaymentsOutlined from "@mui/icons-material/PaymentsOutlined";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
 import Pagination from "@mui/material/Pagination";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -26,6 +24,18 @@ import type { AssetDividendsData, DividendPayment, DividendYearYield } from "@/t
 
 const BRAND_PRIMARY = "#FF6B00";
 const PAYMENTS_PAGE_SIZE = 5;
+const DIVIDEND_CHART_HEIGHT = 280;
+
+/** Grid da tabela de proventos (md+). */
+const paymentTableGridSx = {
+  display: { xs: "none", md: "grid" },
+  gridTemplateColumns: {
+    md: "minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)",
+  },
+  alignItems: "center",
+  gap: { md: 0.75, lg: 1 },
+  px: { md: 1.25, lg: 1.5 },
+} as const;
 
 const money = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -69,32 +79,106 @@ function DividendChartTooltip({
   );
 }
 
-function DividendPaymentRow({ row }: { row: DividendPayment }) {
+function DividendPaymentField({
+  label,
+  value,
+  valueAlign = "left",
+}: {
+  label: string;
+  value: string;
+  valueAlign?: "left" | "right";
+}) {
   return (
-    <ListItem
-      disablePadding
-      sx={{
-        display: "grid",
-        gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.95fr)",
-        alignItems: "center",
-        px: 1.5,
-        py: 1.25,
-        gap: 0.5,
-      }}
-    >
-      <Typography variant="body2" fontWeight={600}>
+    <Box sx={{ minWidth: 0 }}>
+      <Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: "0.65rem", mb: 0.25 }}>
+        {label}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ textAlign: valueAlign, wordBreak: "break-word" }}>
+        {value}
+      </Typography>
+    </Box>
+  );
+}
+
+function DividendPaymentCard({ row }: { row: DividendPayment }) {
+  const value = money.format(row.valuePerShare);
+
+  return (
+    <Box sx={{ px: 1.5, py: 1.25 }}>
+      <Stack spacing={1}>
+        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={1}>
+          <Typography variant="body2" fontWeight={700} sx={{ minWidth: 0 }}>
+            {row.type}
+          </Typography>
+          <Typography variant="body2" fontWeight={700} sx={{ flexShrink: 0, textAlign: "right" }}>
+            {value}
+          </Typography>
+        </Stack>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+            gap: 1,
+          }}
+        >
+          <DividendPaymentField label="Data COM" value={row.comDate} />
+          <DividendPaymentField label="Pagamento" value={row.paymentDate} />
+        </Box>
+      </Stack>
+    </Box>
+  );
+}
+
+function DividendPaymentTableRow({ row }: { row: DividendPayment }) {
+  const value = money.format(row.valuePerShare);
+
+  return (
+    <Box sx={{ ...paymentTableGridSx, py: 1.25 }}>
+      <Typography variant="body2" fontWeight={600} noWrap title={row.type}>
         {row.type}
       </Typography>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" color="text.secondary" noWrap title={row.comDate}>
         {row.comDate}
       </Typography>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" color="text.secondary" noWrap title={row.paymentDate}>
         {row.paymentDate}
       </Typography>
-      <Typography variant="body2" fontWeight={600} textAlign="right">
-        {money.format(row.valuePerShare)}
+      <Typography variant="body2" fontWeight={600} textAlign="right" noWrap title={value}>
+        {value}
       </Typography>
-    </ListItem>
+    </Box>
+  );
+}
+
+function DividendPaymentsTableHeader() {
+  return (
+    <Box
+      sx={{
+        ...paymentTableGridSx,
+        py: 1,
+        bgcolor: "action.hover",
+        borderBottom: 1,
+        borderColor: "divider",
+      }}
+    >
+      {(["Tipo", "Data COM", "Pagamento", "Valor"] as const).map((head) => (
+        <Typography
+          key={head}
+          variant="caption"
+          color="text.secondary"
+          noWrap
+          sx={{
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.04em",
+            fontSize: "0.65rem",
+            textAlign: head === "Valor" ? "right" : "left",
+          }}
+        >
+          {head}
+        </Typography>
+      ))}
+    </Box>
   );
 }
 
@@ -108,7 +192,8 @@ export function AssetDividendsSection({ dividends }: AssetDividendsSectionProps)
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    setChartReady(true);
+    const id = requestAnimationFrame(() => setChartReady(true));
+    return () => cancelAnimationFrame(id);
   }, []);
 
   const totalPages = Math.max(1, Math.ceil(dividends.payments.length / PAYMENTS_PAGE_SIZE));
@@ -141,16 +226,17 @@ export function AssetDividendsSection({ dividends }: AssetDividendsSectionProps)
       <AssetSectionHeading icon={PaymentsOutlined} title="Dividendos" />
 
       <Stack
-        direction={{ xs: "column", md: "row" }}
+        direction={{ xs: "column", lg: "row" }}
         spacing={2}
-        alignItems={{ xs: "stretch", md: "flex-start" }}
-        sx={{ minHeight: 0 }}
+        alignItems="stretch"
+        sx={{ minHeight: 0, width: "100%" }}
       >
         <Box
           sx={{
-            flex: { md: "1 1 50%" },
+            flex: { lg: "1 1 48%" },
             minWidth: 0,
-            height: { xs: 220, md: 280 },
+            width: "100%",
+            height: { xs: 220, sm: 240, lg: DIVIDEND_CHART_HEIGHT },
             bgcolor: "action.hover",
             borderRadius: 2,
             p: 1,
@@ -194,8 +280,9 @@ export function AssetDividendsSection({ dividends }: AssetDividendsSectionProps)
 
         <Box
           sx={{
-            flex: { md: "1 1 50%" },
+            flex: { lg: "1 1 52%" },
             minWidth: 0,
+            width: "100%",
             display: "flex",
             flexDirection: "column",
           }}
@@ -208,46 +295,32 @@ export function AssetDividendsSection({ dividends }: AssetDividendsSectionProps)
               borderColor: "divider",
               borderRadius: 2,
               overflow: "hidden",
+              width: "100%",
             }}
           >
+            <Stack divider={<Divider />} spacing={0} sx={{ display: { xs: "flex", md: "none" } }}>
+              {pagePayments.map((row) => (
+                <DividendPaymentCard key={row.id} row={row} />
+              ))}
+            </Stack>
+
             <Box
               sx={{
-                display: "grid",
-                gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.95fr)",
-                gap: 0.5,
-                px: 1.5,
-                py: 1,
-                bgcolor: "action.hover",
-                borderBottom: 1,
-                borderColor: "divider",
+                display: { xs: "none", md: "block" },
+                overflowX: "auto",
+                maxWidth: "100%",
+                WebkitOverflowScrolling: "touch",
               }}
             >
-              {(["Tipo", "Data COM", "Pagamento", "Valor"] as const).map((head) => (
-                <Typography
-                  key={head}
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                    fontSize: "0.65rem",
-                    textAlign: head === "Valor" ? "right" : "left",
-                  }}
-                >
-                  {head}
-                </Typography>
-              ))}
+              <Box sx={{ minWidth: 340 }}>
+                <DividendPaymentsTableHeader />
+                <Stack divider={<Divider />} spacing={0}>
+                  {pagePayments.map((row) => (
+                    <DividendPaymentTableRow key={row.id} row={row} />
+                  ))}
+                </Stack>
+              </Box>
             </Box>
-
-            <List disablePadding component="ul">
-              {pagePayments.map((row, index) => (
-                <Box key={row.id} component="li" sx={{ listStyle: "none" }}>
-                  <DividendPaymentRow row={row} />
-                  {index < pagePayments.length - 1 ? <Divider component="div" /> : null}
-                </Box>
-              ))}
-            </List>
           </Box>
 
           {totalPages > 1 ? (
